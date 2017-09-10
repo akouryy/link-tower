@@ -1,7 +1,7 @@
 'use strict';
 
-const Width = 6, Height = 13, Size = 20;
-let posA = {x: 1, y: Height - 1}, posB = {x: 4, y: Height - 1}, turnA = true;
+const Width = 6, Height = 13, Size = 24;
+let posA = {x: 1, y: 6}, posB = {x: 4, y: 6}, turnA = true;
 
 const $Grids = _.range(Height).map(() => new Array(Width));
 const $Paths = _.range(Height).map(() => _.range(Width).map(() => [null, null]));
@@ -71,9 +71,12 @@ jQuery($ => {
                 }).addClass('visit-num').appendTo($tower);
             }
         });
+        let scoreA = 0, scoreB = 0;
         grids.forEachPath(({group, y, x, isA, oldGroup}) => {
             if(group) {
                 $Paths[y][x][(y + x + isA) % 2].addClass('owned');
+                scoreA += isA;
+                scoreB += !isA;
             } else {
                 $Paths[y][x][(y + x + isA) % 2].removeClass('owned');
             }
@@ -83,6 +86,8 @@ jQuery($ => {
                 $Paths[y][x][(y + x + isA) % 2].removeClass('recently');
             }
         });
+        $("#score-a").text(scoreA);
+        $("#score-b").text(scoreB);
 
         $towerView.html($tower.html());
 

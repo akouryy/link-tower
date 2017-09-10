@@ -87,3 +87,13 @@
 button#pass {
     display: block;
 }
+
+#score-a {
+    color: #f00;
+    font-size: 2em;
+}
+
+#score-b {
+    color: #00f;
+    font-size: 2em;
+}

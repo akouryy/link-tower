@@ -37,13 +37,28 @@ class Grids {
         return [this.Grids[y][this.justifyX(x)]];
     }
 
-    nextStepCandidates({y, x}) {
-        return _.flatten(_.range(-4, 5).map(dx => _.range(-4, 5).map(dy => {
-            const d = Math.abs(dx) + Math.abs(dy);
-            const pos = {x: this.justifyX(x + dx), y: y + dy}
-            return (d === 2 || d === 4) &&
-                this.at(pos).some(g => g.group === 0 && !g.visited) ? [pos] : [];
-        })));
+    nextStepCandidates({y: y0, x: x0}) {
+        const turnA = (x0 + y0) % 2;
+        return _.flatten(_.range(Width).map(x => _.range(Height).map(y => ({x, y})))).filter(pos =>
+            (pos.x + pos.y) % 2 === turnA && this.at(pos).some(g => g.group === 0 && !g.visited) &&
+                this.reachableGridExists(pos)
+        );
+    }
+
+    reachableGridExists({y, x}) {
+        return {y, x}, [[-1,-1],[-1,1],[1,-1],[1,1]].some(([dx,dy]) =>
+            this.checkReachableGrid({y, x}, {y: dy, x: dx})
+        );
+    }
+
+    checkReachableGrid({y, x: xb}, {y: dy, x: dx}) {
+        const x = this.justifyX(xb);
+        const [g] = this.at({y, x});
+        if(!g) return false;
+        if(g.group !== 0) {
+            return true;
+        }
+        return this.checkReachableGrid({y: y + dy, x: x + dx}, {y: dy, x: dx});
     }
 
     seekReachableGrid({y, x: xb}, {y: dy, x: dx}) {
@@ -51,7 +66,6 @@ class Grids {
         const [g] = this.at({y, x});
         if(!g) return [];
         if(g.group !== 0) {
-            //this.pathUsed[Math.min(y, y + dy)][this.minX(x, this.justifyX(x + dx))][+(dx * dy < 0)] = true;
             return [[{y, x}]];
         }
         return this.seekReachableGrid({y: y + dy, x: x + dx}, {y: dy, x: dx}).map(r => {
@@ -99,38 +113,19 @@ class Grids {
                     })
                 );
             });
-            const oldGroupCount = this.groupCount;
-            for(const [g, g_opposite] of cutGrids) {
-                if(g.group > oldGroupCount) continue;
-                this.setGroupDFS(g, g_opposite, ++this.groupCount, !turnA);
-            }
-            if(cutGrids.length > 0) {
-                const gridSize = {};
-                let maxGridSize = 0;
-                this.forEachPath(({group, y, x, isA}) => {
-                    if(group > oldGroupCount) {
-                        gridSize[group] = (gridSize[group] || 0) + 1;
-                        if(gridSize[group] > maxGridSize) maxGridSize = gridSize[group];
-                    }
-                });
+            if(this.visitCount >= 4) {
                 this.forEach(g => {
-                    if(g.group > oldGroupCount && (gridSize[g.group] || 0) < maxGridSize) {
+                    const d = [{group:0},{group:0}];
+                    if([g.x, this.justifyX(g.x-1)].every(x => [g.y, g.y-1].every(y => {
+                        const r = this.pathUsed[y];
+                        if(!r) return true;
+                        return !r[x][(x + y + 1) % 2];
+                    }))) {
                         g.group = 0;
-                    }
-                });
-                this.forEachPath(({group, y, x, isA}) => {
-                    const rightUp = (x + y + isA) % 2;
-                    const g1 = this.at({x, y: y + rightUp})[0],
-                          g2 = this.at({x: x + 1, y: y + !rightUp})[0];
-                    //if(x === 3 && y === 6 && isA === true) console.log(g1.group, g2.group);
-                    if(g1.group === 0 || g1.group !== g2.group) {
-                        this.pathUsed[y][x][rightUp] = false;
                     }
                 });
             }
         }
-        console.log(this.Grids);
-        console.log(this.pathUsed);
     }
 
     setGroupDFS(grid, parent, group) {
