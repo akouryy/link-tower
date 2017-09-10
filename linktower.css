@@ -1,3 +1,20 @@
+@keyframes add-a {
+    0%  { stroke: #ff0; stroke-width: 3px; }
+    20% { stroke: #f00; stroke-width: 5px; }
+}
+@keyframes add-b {
+    0%  { stroke: #ff0; stroke-width: 3px; }
+    20% { stroke: #69f; stroke-width: 5px; }
+}
+@keyframes remove-a {
+    0%  { stroke: #ff0; stroke-width: 3px; }
+    20% { stroke: #000; stroke-width: 1px; }
+}
+@keyframes remove-b {
+    0%  { stroke: #ff0; stroke-width: 3px; }
+    20% { stroke: #000; stroke-width: 1px; }
+}
+
 .tower .grid, .tower .path {
     stroke: #666;
     fill: rgba(255, 255, 255, 0);
@@ -31,12 +48,40 @@
 }
 
 .tower .path.owned.a {
-    stroke: #f99;
-    stroke-width: 3px;
+    stroke: #f00;
+    stroke-width: 5px;
 }
 .tower .path.owned.b {
-    stroke: #99f;
-    stroke-width: 3px;
+    stroke: #69f;
+    stroke-width: 5px;
+}
+
+.tower .path.owned.recently.a {
+    stroke: #f00;
+    stroke-width: 5px;
+    animation: add-a 5s infinite;
+}
+.tower .path.owned.recently.b {
+    stroke: #69f;
+    stroke-width: 5px;
+    animation: add-b 5s infinite;
+}
+
+.tower .path:not(.owned).recently.a {
+    stroke: #000;
+    stroke-width: 1px;
+    animation: remove-a 5s infinite;
+}
+.tower .path:not(.owned).recently.b {
+    stroke: #000;
+    stroke-width: 1px;
+    animation: remove-b 5s infinite;
+}
+
+.tower .visit-num {
+    dominant-baseline: text-after-edge;
+    text-anchor: middle;
+    font-family: monospace;
 }
 
 button#pass {

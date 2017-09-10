@@ -7,8 +7,8 @@ const $Grids = _.range(Height).map(() => new Array(Width));
 const $Paths = _.range(Height).map(() => _.range(Width).map(() => [null, null]));
 
 const grids = new Grids({w: Width, h: Height});
-grids.setOwner(posA, turnA);
-grids.setOwner(posB, turnA);
+grids.visit(posA, turnA);
+grids.visit(posB, turnA);
 
 jQuery($ => {
     const $tower = $("<svg>");
@@ -53,6 +53,37 @@ jQuery($ => {
         grids.nextStepCandidates(pos).forEach(({x, y}) => {
             $Grids[y][x].addClass('next');
         });
+
+        $tower.find('.visit-num').remove();
+        grids.forEach(g => {
+            const $g = $Grids[g.y][g.x];
+            $g.removeClass('g-0 g-1 g-2 g-3 g-4 g-5 g-6 g-7 g-8 g-9 g-10').addClass(`g-${g.group}`);
+            if(g.group !== 0) {
+                $g.addClass('owned');
+            } else {
+                $g.removeClass('owned');
+            }
+            if(g.visited !== 0) {
+                $("<text>").text(g.visited).attr({
+                    'font-size': Size,
+                    x: +$g.attr('x') + Size / 2,
+                    y: +$g.attr('y') + Size,
+                }).addClass('visit-num').appendTo($tower);
+            }
+        });
+        grids.forEachPath(({group, y, x, isA, oldGroup}) => {
+            if(group) {
+                $Paths[y][x][(y + x + isA) % 2].addClass('owned');
+            } else {
+                $Paths[y][x][(y + x + isA) % 2].removeClass('owned');
+            }
+            if(!group !== !oldGroup) {
+                $Paths[y][x][(y + x + isA) % 2].addClass('recently');
+            } else {
+                $Paths[y][x][(y + x + isA) % 2].removeClass('recently');
+            }
+        });
+
         $towerView.html($tower.html());
 
         $towerView.off('click').on('click', ev => {
@@ -61,24 +92,11 @@ jQuery($ => {
                 const newPos = {x: $target.data('x'), y: $target.data('y')};
                 if(turnA) posA = newPos;
                 else      posB = newPos;
-                grids.setOwner(newPos, turnA);
-                grids.forEach(g => {
-                    if(g.group !== 0) {
-                        $Grids[g.y][g.x].addClass('owned').addClass(`g-${g.group}`);
-                    } else {
-                        $Grids[g.y][g.x].removeClass('owned');
-                    }
-                });
-                grids.forEachPath(({used, y, x, isA}) => {
-                    if(used) {
-                        $Paths[y][x][(y + x + isA) % 2].addClass('owned');
-                    } else {
-                        $Paths[y][x][(y + x + isA) % 2].removeClass('owned');
-                    }
-                });
+                grids.visit(newPos, turnA);
                 turnA = !turnA;
                 turn();
             }
+            return false;
         });
     }
     turn();
